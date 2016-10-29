@@ -1,5 +1,6 @@
 package com.sam_chordas.android.stockhawk.service;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
@@ -7,6 +8,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.RemoteException;
 import android.util.Log;
+
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
@@ -16,9 +18,14 @@ import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by sam_chordas on 9/30/15.
@@ -32,6 +39,8 @@ public class StockTaskService extends GcmTaskService{
   private Context mContext;
   private StringBuilder mStoredSymbols = new StringBuilder();
   private boolean isUpdate;
+
+  public final String YAHOO_BASE_URI = "https://query.yahooapis.com/v1/public/yql?q=";
 
   public StockTaskService(){}
 
@@ -130,6 +139,71 @@ public class StockTaskService extends GcmTaskService{
         e.printStackTrace();
       }
     }
+
+    Cursor historicQueryBySymbol;
+    historicQueryBySymbol = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
+            new String[] {"Distinct " + QuoteColumns.SYMBOL}, null, null, null);
+
+    if(historicQueryBySymbol != null){
+      historicQueryBySymbol.moveToFirst();
+      Date userCurrentDate = new Date();
+
+      Calendar startCalendar= Calendar.getInstance();
+      Calendar endCalendar = Calendar.getInstance();
+      startCalendar.setTime(userCurrentDate);
+      endCalendar.setTime(userCurrentDate);
+      //3 months history
+      startCalendar.add(Calendar.MONTH, - 3);
+      endCalendar.add(Calendar.DATE, 0);
+
+      SimpleDateFormat yahooDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+      String startDate = yahooDateFormat.format(startCalendar.getTime());
+      String endDate = yahooDateFormat.format(endCalendar.getTime());
+      // Not looping yet because only charting one stock
+
+      String stockSymbol = historicQueryBySymbol.getString(historicQueryBySymbol.getColumnIndex(QuoteColumns.SYMBOL));
+
+      StringBuilder historicQueryUriString = new StringBuilder();
+      try{
+        historicQueryUriString.append(YAHOO_BASE_URI);
+        historicQueryUriString.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol = ", "UTF-8"));
+        historicQueryUriString.append(URLEncoder.encode("\"" + stockSymbol + "\"", "UTF-8"));
+        historicQueryUriString.append(URLEncoder.encode("and startDate=\"" + startDate +"\" and endDate=\"", "UTF-8"));
+
+      } catch(UnsupportedEncodingException unEnEx) {
+        unEnEx.printStackTrace();
+      }
+      historicQueryUriString.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
+              + "org%2Falltableswithkeys&callback=");
+
+      String historicUrlString;
+      String getHistoricResponse;
+      int historicResult = GcmNetworkManager.RESULT_FAILURE;
+
+      if (urlStringBuilder != null){
+        historicUrlString = historicQueryUriString.toString();
+        try{
+          getHistoricResponse = fetchData(historicUrlString);
+          historicResult = GcmNetworkManager.RESULT_SUCCESS;
+          try {
+            ContentValues contentValues = new ContentValues();
+            //delete old data
+            ContentResolver resolver = mContext.getContentResolver();
+//            resolver.delete(QuoteProvider.QuotesOverTime.CONTENT_URI,
+//                    QuoteOverTimeColumns.SYMBOL + " = \"" + stockSymbol + "\"", null);
+            mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
+                    Utils.quoteJsonToContentVals(getHistoricResponse));
+          }catch (RemoteException | OperationApplicationException e){
+            Log.e(LOG_TAG, "Error applying batch insert", e);
+          }
+        } catch (IOException e){
+          e.printStackTrace();
+        }
+      }
+
+
+    }
+    historicQueryBySymbol.close();
 
     return result;
   }

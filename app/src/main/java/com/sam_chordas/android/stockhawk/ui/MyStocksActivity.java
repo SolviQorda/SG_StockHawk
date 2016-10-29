@@ -82,13 +82,16 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     recyclerView.setLayoutManager(new LinearLayoutManager(this));
     getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
+
     mCursorAdapter = new QuoteCursorAdapter(this, null);
     recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
             new RecyclerViewItemClickListener.OnItemClickListener() {
               @Override public void onItemClick(View v, int position) {
-                //TODO:
-                // do something on item click
-                Toast.makeText(MyStocksActivity.this, "testing - item clicked", Toast.LENGTH_LONG).show();
+                //TODO:parse relevant data
+                String symbol = ((TextView) v.findViewById(R.id.stock_symbol)).getText().toString();
+                Intent graphActivityIntent = new Intent(mContext, StockOverTimeGraphActivity.class);
+                graphActivityIntent.putExtra("symbol", symbol);
+                startActivity(graphActivityIntent);
               }
             }));
     recyclerView.setAdapter(mCursorAdapter);
