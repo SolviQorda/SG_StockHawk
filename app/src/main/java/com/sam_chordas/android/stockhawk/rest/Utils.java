@@ -2,12 +2,16 @@ package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
 import android.util.Log;
+
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
+import com.sam_chordas.android.stockhawk.data.QuoteOverTimeColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -44,6 +48,30 @@ public class Utils {
       }
     } catch (JSONException e){
       Log.e(LOG_TAG, "String to JSON failed: " + e);
+    }
+    return batchOperations;
+  }
+
+  public static ArrayList quoteJsonToContentValsOverTime(String JSON) {
+    ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
+    JSONObject jsonObject = null;
+    JSONArray jsonArray = null;
+    try {
+      jsonObject = new JSONObject(JSON);
+      if(jsonObject != null && jsonObject.length()!=0){
+        jsonObject = jsonObject.getJSONObject("query");
+//        int count = Integer.parseInt(jsonObject.getString("count"));
+//        if (count)
+        jsonArray = jsonObject.getJSONObject("results").getJSONArray("quote");
+        if(jsonArray != null && jsonArray.length() != 0) {
+          for (int i =0;i <jsonArray.length();i++){
+            jsonObject = jsonArray.getJSONObject(i);
+            batchOperations.add(buildOverTimeBatchOp(jsonObject));
+          }
+        }
+      }
+    } catch (JSONException e){
+      Log.e(LOG_TAG, "String to JSON(historic) failed: "+ e);
     }
     return batchOperations;
   }
@@ -92,4 +120,19 @@ public class Utils {
     }
     return builder.build();
   }
-}
+
+  public static ContentProviderOperation buildOverTimeBatchOp(JSONObject object) {
+    ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(QuoteProvider.QuotesOverTime.CONTENT_URI);
+    try {
+      builder.withValue(QuoteOverTimeColumns.SYMBOL, object.getString("Symbol"));
+      builder.withValue(QuoteOverTimeColumns.DATE, object.getString("Date"));
+      builder.withValue(QuoteOverTimeColumns.HIGH_PRICE, object.getString("High"));
+
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+    return builder.build();
+  }
+
+  }
+

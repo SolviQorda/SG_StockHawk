@@ -39,6 +39,11 @@
             />
         </activity>
 
+        <provider
+            android:authorities="com.sam_chordas.android.stockhawk.data.QuoteProvider"
+            android:name=".data.QuoteProvider"
+            android:exported="true"/>
+
         <service android:name="com.sam_chordas.android.stockhawk.service.StockTaskService"
             android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE"
             android:exported="true">
@@ -46,11 +51,27 @@
                 <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY"/>
             </intent-filter>
         </service>
+
+        <!--stock collection widget -->
+        <receiver android:name=".widget.CollectionWidgetProvider"
+                  android:label="@string/stock_collection_widget"
+                    android:enabled="@bool/collection_widget_enabled">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="com.sam_chordas.android.stockhawk.app.ACTION_DATA_UPDATES"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                        android:resource="@xml/stock_collection_info"/>
+        </receiver>
+        <service android:name=".widget.CollectionWidgetRemoteViewsService"
+                 android:enabled="@bool/collection_widget_enabled"
+                 android:exported="false"
+                 android:permission="android.permission.BIND_REMOTEVIEWS"/>
+
         <service android:name="com.sam_chordas.android.stockhawk.service.StockIntentService" />
-        <provider
-            android:authorities="com.sam_chordas.android.stockhawk.data.QuoteProvider"
-            android:name="com.sam_chordas.android.stockhawk.data.generated.QuoteProvider"
-            android:exported="false"/>
+
+
+
         <activity
             android:name="com.sam_chordas.android.stockhawk.ui.SettingsActivity"
             android:theme="@style/SettingsTheme"

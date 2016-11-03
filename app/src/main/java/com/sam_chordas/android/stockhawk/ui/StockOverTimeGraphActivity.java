@@ -7,12 +7,14 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteOverTimeColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
@@ -37,7 +39,7 @@ public class StockOverTimeGraphActivity extends AppCompatActivity implements Loa
         super.onCreate(savedInstanceState);
 
         String stockSymbol = getIntent().getExtras().getString("symbol");
-
+        setContentView(R.layout.activity_line_graph);
         stockChart = (LineChart) findViewById(R.id.linechart);
 
         getSupportLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
@@ -46,6 +48,9 @@ public class StockOverTimeGraphActivity extends AppCompatActivity implements Loa
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String stockSymbol = getIntent().getExtras().getString("symbol");
+
+
         String[] projection = new String[] {
                 QuoteOverTimeColumns._ID,
                 QuoteOverTimeColumns.SYMBOL,
@@ -63,10 +68,11 @@ public class StockOverTimeGraphActivity extends AppCompatActivity implements Loa
                         sortOrder);
     }
 
+
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data){
         if(data.moveToFirst()){
-
+            data.moveToFirst();
             mStocks = new ArrayList<>();
             //xvalue is date
             //yvalue is high
@@ -80,7 +86,6 @@ public class StockOverTimeGraphActivity extends AppCompatActivity implements Loa
                 singleStockToAddToChart.setHighPrice(highPrice);
 
                 mStocks.add(singleStockToAddToChart);
-                Log.v(LOG_TAG, "mStocks" + mStocks);
 
             }
             while(data.moveToNext());
@@ -89,7 +94,6 @@ public class StockOverTimeGraphActivity extends AppCompatActivity implements Loa
             List<Entry> entries = new ArrayList<Entry>();
             for(int i = 0; i < mStocks.size();i++){
                 float highPrice = Float.parseFloat(mStocks.get(i).getHighPrice());
-                Log.v(LOG_TAG, "float value: $" + highPrice);
                 float dateMarker = (float) i;
                 Entry stock = new Entry(dateMarker, highPrice);
                 entries.add(stock);
@@ -99,6 +103,12 @@ public class StockOverTimeGraphActivity extends AppCompatActivity implements Loa
             //line dataset
             LineDataSet dataSet = new LineDataSet(entries, "price ($)");
             LineData lineData = new LineData(dataSet);
+            XAxis xAxis = stockChart.getXAxis();
+            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+            Description desc = new Description();
+            desc.setTextColor(ColorTemplate.MATERIAL_COLORS[1]);
+            desc.setText(getString(R.string.chart_description));
+            stockChart.setDescription(desc);
             stockChart.setData(lineData);
         }
     }

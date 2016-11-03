@@ -14,7 +14,7 @@ public class QuoteOverTimeColumns {
     public static final String _ID = "_id";
     @DataType(DataType.Type.TEXT) @NotNull
     public static final String SYMBOL = "symbol";
-    @DataType(DataType.Type.TEXT) @NotNull
+    @DataType(DataType.Type.TEXT) //@notnull
     public static final String HIGH_PRICE = "high";
     @DataType(DataType.Type.TEXT)
     public static final String DATE = "date";

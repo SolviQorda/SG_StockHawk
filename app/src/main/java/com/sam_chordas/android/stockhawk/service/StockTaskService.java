@@ -13,6 +13,7 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
+import com.sam_chordas.android.stockhawk.data.QuoteOverTimeColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.squareup.okhttp.OkHttpClient;
@@ -142,7 +143,7 @@ public class StockTaskService extends GcmTaskService{
 
     Cursor historicQueryBySymbol;
     historicQueryBySymbol = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-            new String[] {"Distinct " + QuoteColumns.SYMBOL}, null, null, null);
+            new String[] {"Distinct " + QuoteOverTimeColumns.SYMBOL}, null, null, null);
 
     if(historicQueryBySymbol != null){
       historicQueryBySymbol.moveToFirst();
@@ -159,49 +160,49 @@ public class StockTaskService extends GcmTaskService{
       SimpleDateFormat yahooDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
       String startDate = yahooDateFormat.format(startCalendar.getTime());
       String endDate = yahooDateFormat.format(endCalendar.getTime());
-      // Not looping yet because only charting one stock
 
-      String stockSymbol = historicQueryBySymbol.getString(historicQueryBySymbol.getColumnIndex(QuoteColumns.SYMBOL));
+      for(int i = 0; i < historicQueryBySymbol.getCount();i++) {
 
-      StringBuilder historicQueryUriString = new StringBuilder();
-      try{
-        historicQueryUriString.append(YAHOO_BASE_URI);
-        historicQueryUriString.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol = ", "UTF-8"));
-        historicQueryUriString.append(URLEncoder.encode("\"" + stockSymbol + "\"", "UTF-8"));
-        historicQueryUriString.append(URLEncoder.encode("and startDate=\"" + startDate +"\" and endDate=\"", "UTF-8"));
+        String stockSymbol = historicQueryBySymbol.getString(historicQueryBySymbol.getColumnIndex(QuoteColumns.SYMBOL));
 
-      } catch(UnsupportedEncodingException unEnEx) {
-        unEnEx.printStackTrace();
-      }
-      historicQueryUriString.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
-              + "org%2Falltableswithkeys&callback=");
+        StringBuilder historicQueryUriString = new StringBuilder();
+        try {
+          historicQueryUriString.append(YAHOO_BASE_URI);
+          historicQueryUriString.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol = ", "UTF-8"));
+          historicQueryUriString.append(URLEncoder.encode("\"" + stockSymbol + "\"", "UTF-8"));
+          historicQueryUriString.append(URLEncoder.encode("and startDate=\"" + startDate + "\" and endDate=\"" + endDate + "\"", "UTF-8"));
 
-      String historicUrlString;
-      String getHistoricResponse;
-      int historicResult = GcmNetworkManager.RESULT_FAILURE;
+        } catch (UnsupportedEncodingException unEnEx) {
+          unEnEx.printStackTrace();
+        }
+        historicQueryUriString.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
+                + "org%2Falltableswithkeys&callback=");
 
-      if (urlStringBuilder != null){
-        historicUrlString = historicQueryUriString.toString();
-        try{
-          getHistoricResponse = fetchData(historicUrlString);
-          historicResult = GcmNetworkManager.RESULT_SUCCESS;
+        String historicUrlString;
+        String getHistoricResponse;
+        int historicResult = GcmNetworkManager.RESULT_FAILURE;
+
+        if (historicQueryUriString != null) {
+          historicUrlString = historicQueryUriString.toString();
           try {
-            ContentValues contentValues = new ContentValues();
-            //delete old data
-            ContentResolver resolver = mContext.getContentResolver();
+            getHistoricResponse = fetchData(historicUrlString);
+            Log.v(LOG_TAG, "historicresponse:" + getHistoricResponse);
+            try {
+              //delete old data
+              ContentResolver resolver = mContext.getContentResolver();
 //            resolver.delete(QuoteProvider.QuotesOverTime.CONTENT_URI,
 //                    QuoteOverTimeColumns.SYMBOL + " = \"" + stockSymbol + "\"", null);
-            mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-                    Utils.quoteJsonToContentVals(getHistoricResponse));
-          }catch (RemoteException | OperationApplicationException e){
-            Log.e(LOG_TAG, "Error applying batch insert", e);
+              mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
+                      Utils.quoteJsonToContentValsOverTime(getHistoricResponse));
+            } catch (RemoteException | OperationApplicationException e) {
+              Log.e(LOG_TAG, "Error applying batch insert", e);
+            }
+          } catch (IOException e) {
+            e.printStackTrace();
           }
-        } catch (IOException e){
-          e.printStackTrace();
         }
+        historicQueryBySymbol.moveToNext();
       }
-
-
     }
     historicQueryBySymbol.close();
 
