@@ -41,7 +41,7 @@
 
         <provider
             android:authorities="com.sam_chordas.android.stockhawk.data.QuoteProvider"
-            android:name=".data.QuoteProvider"
+            android:name=".data.generated.QuoteProvider"
             android:exported="true"/>
 
         <service android:name="com.sam_chordas.android.stockhawk.service.StockTaskService"
