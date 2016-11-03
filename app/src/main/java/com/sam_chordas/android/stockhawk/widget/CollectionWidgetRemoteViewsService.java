@@ -104,10 +104,11 @@ public class CollectionWidgetRemoteViewsService extends RemoteViewsService {
                     }
 
                     Intent graphActivityIntent = new Intent();
+                    graphActivityIntent.setData(QuoteProvider.Quotes.withSymbol(symbol));
                     graphActivityIntent.putExtra(STOCK_SYMBOL, symbol);
                     graphActivityIntent.putExtra(ACTIVITY ,PARENT_WIDGET);
                     //doublecheck this is the right id
-                    remoteViews.setOnClickFillInIntent(R.id.list_item_quote, graphActivityIntent);
+                    remoteViews.setOnClickFillInIntent(R.id.stock_collection_widget_list, graphActivityIntent);
                 return remoteViews;
             }
 
@@ -124,6 +125,10 @@ public class CollectionWidgetRemoteViewsService extends RemoteViewsService {
 
             @Override
             public long getItemId(int position) {
+
+                if (data.moveToPosition(position)) {
+                    return data.getInt(INDEX_STOCK_ID);
+                }
                 return position;
             }
 

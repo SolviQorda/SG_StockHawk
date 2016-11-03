@@ -1,8 +1,10 @@
 package com.sam_chordas.android.stockhawk.widget;
 
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -23,14 +25,20 @@ public class CollectionWidgetProvider extends AppWidgetProvider {
         for(int appWidgetId : appWidgetIds) {
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.stock_collection_widget);
 
-            //intent for StockGraphActivity
+            //intent for MyStocks
             Intent intent = new Intent(context, MyStocksActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-            views.setPendingIntentTemplate(R.id.stock_collection_widget_list, pendingIntent);
-            views.setRemoteAdapter(R.id.stock_collection_widget_list, intent);
+            views.setOnClickPendingIntent(R.id.stock_collection_widget_list, pendingIntent);
 
-            //to update : dependent on setting for onlick
-            boolean useGraphActivity = context.getResources().getBoolean(R.bool.collection_widget_enabled);
+            setRemoteAdapter(context, views);
+
+
+            Intent widgetClickIntent = new Intent(context, MyStocksActivity.class);
+            PendingIntent widgetClickPendingIntent = TaskStackBuilder.create(context)
+                    .addNextIntentWithParentStack(widgetClickIntent)
+                    .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+            views.setPendingIntentTemplate(R.id.stock_collection_widget_list, widgetClickPendingIntent);
+//            views.setPendingIntentTemplate(R.id.stock_collection_widget_list, pendingIntent);
 
             appWidgetManager.updateAppWidget(appWidgetId, views);
 
@@ -41,6 +49,11 @@ public class CollectionWidgetProvider extends AppWidgetProvider {
     public void onReceive(@NonNull Context context, @NonNull Intent intent){
         super.onReceive(context, intent);
         //need a way to detect updates to the db
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
+                new ComponentName(context, getClass())
+        );
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.stock_collection_widget_list);
     }
 
     private void setRemoteAdapter(Context context, @NonNull final RemoteViews views) {
