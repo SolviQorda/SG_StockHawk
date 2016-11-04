@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Binder;
+import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -77,7 +78,7 @@ public class CollectionWidgetRemoteViewsService extends RemoteViewsService {
 
             @Override
             public int getCount() {
-                return 0;
+                return data.getCount();
             }
 
             @Override
@@ -89,6 +90,7 @@ public class CollectionWidgetRemoteViewsService extends RemoteViewsService {
 
                 //want to loop through the stocks that exist and write them to the list
                 RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.list_item_quote);
+                Log.v(LOG_TAG, "remoteViews status:" + remoteViews);
                  String symbol = data.getString(data.getColumnIndex(QuoteColumns.SYMBOL));
                     String bidPrice = data.getString(data.getColumnIndex(QuoteColumns.BIDPRICE));
                     String change = data.getString(data.getColumnIndex(QuoteColumns.CHANGE));
@@ -105,8 +107,8 @@ public class CollectionWidgetRemoteViewsService extends RemoteViewsService {
 
                     Intent graphActivityIntent = new Intent();
                     graphActivityIntent.setData(QuoteProvider.Quotes.withSymbol(symbol));
-                    graphActivityIntent.putExtra(STOCK_SYMBOL, symbol);
-                    graphActivityIntent.putExtra(ACTIVITY ,PARENT_WIDGET);
+//                    graphActivityIntent.putExtra(STOCK_SYMBOL, symbol);
+//                    graphActivityIntent.putExtra(ACTIVITY ,PARENT_WIDGET);
                     //doublecheck this is the right id
                     remoteViews.setOnClickFillInIntent(R.id.stock_collection_widget_list, graphActivityIntent);
                 return remoteViews;

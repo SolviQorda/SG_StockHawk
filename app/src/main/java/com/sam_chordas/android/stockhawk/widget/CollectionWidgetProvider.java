@@ -1,13 +1,14 @@
 package com.sam_chordas.android.stockhawk.widget;
 
 import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v4.app.TaskStackBuilder;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.sam_chordas.android.stockhawk.R;
@@ -23,12 +24,13 @@ public class CollectionWidgetProvider extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
         for(int appWidgetId : appWidgetIds) {
+            Log.i("TAG", "update");
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.stock_collection_widget);
 
             //intent for MyStocks
-            Intent intent = new Intent(context, MyStocksActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-            views.setOnClickPendingIntent(R.id.stock_collection_widget_list, pendingIntent);
+//            Intent intent = new Intent(context, MyStocksActivity.class);
+//            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+//            views.setOnClickPendingIntent(R.id.stock_collection_widget_list, pendingIntent);
 
             setRemoteAdapter(context, views);
 
@@ -38,6 +40,7 @@ public class CollectionWidgetProvider extends AppWidgetProvider {
                     .addNextIntentWithParentStack(widgetClickIntent)
                     .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
             views.setPendingIntentTemplate(R.id.stock_collection_widget_list, widgetClickPendingIntent);
+            Log.v("LOGTAG", "LOG:clickintent" + widgetClickIntent);
 //            views.setPendingIntentTemplate(R.id.stock_collection_widget_list, pendingIntent);
 
             appWidgetManager.updateAppWidget(appWidgetId, views);

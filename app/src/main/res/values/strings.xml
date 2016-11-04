@@ -11,6 +11,7 @@
   <string name="input_prefill"></string>
   <string name="no_network_blank_screen" translatable="true">No internet connection detected. To update or access data please connect your device to the internet.</string>
   <string name="network_toast" translatable="true">Uh-oh! This app requires an internet connection</string>
+  <string name="add_stock_button" translatable="true">Add stock to list</string>
 
   <string name="chart_description" translatable="true">Stock price over the last 3 months</string>
   <string name="stock_collection_widget" translatable="true">StockHawk collection widget</string>

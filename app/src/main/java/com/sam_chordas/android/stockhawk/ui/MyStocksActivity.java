@@ -74,6 +74,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
       if (isConnected){
         startService(mServiceIntent);
       } else{
+        updateEmptyView();
+
         networkToast();
       }
     }
@@ -98,12 +100,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
 
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+    fab.setContentDescription(getString(R.string.add_stock_button));
     fab.attachToRecyclerView(recyclerView);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
         if (isConnected){
 
-          //TODO: evaluate input and handle bad input
           new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
               .content(R.string.content_test)
               .inputType(InputType.TYPE_CLASS_TEXT)
@@ -226,7 +228,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     mCursorAdapter.swapCursor(data);
     mCursor = data;
     if(data.equals(null)) {
-      updateEmptyView();
     }
   }
 
