@@ -7,6 +7,7 @@
   <string name="action_change_units" translatable="true">Change Units</string>
   <string name="symbol_search" translatable="true">Symbol Search</string>
   <string name="content_test" translatable="true">Search for a Stock Symbol</string>
+  <string name="wrong_symbol" translatable="true">That stock didn\'t work - check your symbol spelling and try again.</string>
   <string name="input_hint" translatable="false">FB</string>
   <string name="input_prefill"></string>
   <string name="no_network_blank_screen" translatable="true">No internet connection detected. To update or access data please connect your device to the internet.</string>

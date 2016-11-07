@@ -5,12 +5,13 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.ActionBar;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -21,7 +22,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.gcm.GcmNetworkManager;
+import com.google.android.gms.gcm.PeriodicTask;
+import com.google.android.gms.gcm.Task;
+import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
@@ -30,13 +36,9 @@ import com.sam_chordas.android.stockhawk.rest.RecyclerViewItemClickListener;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
-import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.PeriodicTask;
-import com.google.android.gms.gcm.Task;
-import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
 
-public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, SharedPreferences.OnSharedPreferenceChangeListener{
 
   /**
    * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -89,7 +91,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
             new RecyclerViewItemClickListener.OnItemClickListener() {
               @Override public void onItemClick(View v, int position) {
-                //TODO:parse relevant data
                 String symbol = ((TextView) v.findViewById(R.id.stock_symbol)).getText().toString();
                 Intent graphActivityIntent = new Intent(mContext, StockOverTimeGraphActivity.class);
                 graphActivityIntent.putExtra("symbol", symbol);
@@ -105,34 +106,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     fab.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
         if (isConnected){
-
-          new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
-              .content(R.string.content_test)
-              .inputType(InputType.TYPE_CLASS_TEXT)
-              .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
-                @Override public void onInput(MaterialDialog dialog, CharSequence input) {
-                  // On FAB click, receive user input. Make sure the stock doesn't already exist
-                  // in the DB and proceed accordingly
-                  //TODO: handle exceptions for stocks not recognised
-                  Cursor c = getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-                      new String[] { QuoteColumns.SYMBOL }, QuoteColumns.SYMBOL + "= ?",
-                      new String[] { input.toString() }, null);
-                  if (c.getCount() != 0) {
-                    Toast toast =
-                        Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
-                            Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
-                    toast.show();
-                    return;
-                  } else {
-                    // Add the stock to DB
-                    mServiceIntent.putExtra("tag", "add");
-                    mServiceIntent.putExtra("symbol", input.toString());
-                    startService(mServiceIntent);
-                  }
-                }
-              })
-              .show();
+            getSymbolFromUser();
         } else {
           networkToast();
         }
@@ -171,6 +145,15 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   public void onResume() {
     super.onResume();
     getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
+    SharedPreferences prefs = getSharedPreferences(Utils.SH_PREFS, 0);
+    prefs.registerOnSharedPreferenceChangeListener(this);
+  }
+
+  @Override
+  public void onPause() {
+    SharedPreferences prefs = getSharedPreferences(Utils.SH_PREFS, 0);
+    prefs.unregisterOnSharedPreferenceChangeListener(this);
+    super.onPause();
   }
 
   public void networkToast(){
@@ -237,7 +220,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   }
 
   private void updateEmptyView() {
-    //this is not a robust solution. We need to handle errors for bad input, and different server problems.
     if(!isConnected){
       TextView tv = (TextView)findViewById(R.id.listview_stockdata_empty);
       if(tv != null){
@@ -250,5 +232,43 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
       TextView tv = (TextView)findViewById(R.id.listview_stockdata_empty);
       tv.setEnabled(false);
     }
+  }
+
+  @Override
+  public void onSharedPreferenceChanged(SharedPreferences prefs, String key){
+    String symbol = getSharedPreferences(Utils.SH_PREFS, 0).getString(getString(R.string.wrong_symbol), "");
+    if(!symbol.isEmpty()){
+      getSymbolFromUser();
+    }
+  }
+
+  private void getSymbolFromUser() {
+
+    new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
+            .content(R.string.content_test)
+            .inputType(InputType.TYPE_CLASS_TEXT)
+            .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
+              @Override public void onInput(MaterialDialog dialog, CharSequence input) {
+                // On FAB click, receive user input. Make sure the stock doesn't already exist
+                // in the DB and proceed accordingly
+                Cursor c = getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
+                        new String[] { QuoteColumns.SYMBOL }, QuoteColumns.SYMBOL + "= ?",
+                        new String[] { input.toString() }, null);
+                if (c.getCount() != 0) {
+                  Toast toast =
+                          Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
+                                  Toast.LENGTH_LONG);
+                  toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+                  toast.show();
+                  return;
+                } else {
+                  // Add the stock to DB
+                  mServiceIntent.putExtra("tag", "add");
+                  mServiceIntent.putExtra("symbol", input.toString());
+                  startService(mServiceIntent);
+                }
+              }
+            })
+            .show();
   }
 }

@@ -1,5 +1,6 @@
 package com.sam_chordas.android.stockhawk.service;
 
+import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -60,6 +62,7 @@ public class StockTaskService extends GcmTaskService{
   @Override
   public int onRunTask(TaskParams params){
     Cursor initQueryCursor;
+    String stockInput = "";
     if (mContext == null){
       mContext = this;
     }
@@ -103,7 +106,7 @@ public class StockTaskService extends GcmTaskService{
     } else if (params.getTag().equals("add")){
       isUpdate = false;
       // get symbol from params.getExtra and build query
-      String stockInput = params.getExtras().getString("symbol");
+      stockInput = params.getExtras().getString("symbol");
       try {
         urlStringBuilder.append(URLEncoder.encode("\""+stockInput+"\")", "UTF-8"));
       } catch (UnsupportedEncodingException e){
@@ -130,6 +133,13 @@ public class StockTaskService extends GcmTaskService{
             contentValues.put(QuoteColumns.ISCURRENT, 0);
             mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
                 null, null);
+          }
+          ArrayList<ContentProviderOperation> stockSymbols = Utils.quoteJsonToContentVals(getResponse);
+          if(stockSymbols.size() == 0){
+            result = GcmNetworkManager.RESULT_FAILURE;
+            Utils.stockSearchRequest(mContext, stockInput, false);
+          } else {
+            Utils.stockSearchRequest(mContext, stockInput, true);
           }
           mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
               Utils.quoteJsonToContentVals(getResponse));
