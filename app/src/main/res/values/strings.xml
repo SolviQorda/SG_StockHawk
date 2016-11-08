@@ -4,6 +4,7 @@
   <string name="action_example" translatable="true">Example action</string>
 
   <string name="pref_wrong_stock_symbol" translatable="false">invalid_stock_symbol</string>
+  <string name="already_saved" translatable="true">This stock is already saved!</string>
 
   <string name="action_settings" translatable="true">Settings</string>
   <string name="action_change_units" translatable="true">Change Units</string>
