@@ -143,10 +143,11 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
   @Override
   public void onResume() {
-    super.onResume();
+
     getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
     SharedPreferences prefs = getSharedPreferences(Utils.SH_PREFS, 0);
     prefs.registerOnSharedPreferenceChangeListener(this);
+    super.onResume();
   }
 
   @Override
@@ -180,11 +181,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     // automatically handle clicks on the Home/Up button, so long
     // as you specify a parent activity in AndroidManifest.xml.
     int id = item.getItemId();
-
-    //noinspection SimplifiableIfStatement
-    if (id == R.id.action_settings) {
-      return true;
-    }
 
     if (id == R.id.action_change_units){
       // this is for changing stock changes from percent value to dollar value
@@ -236,8 +232,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
   @Override
   public void onSharedPreferenceChanged(SharedPreferences prefs, String key){
-    String symbol = getSharedPreferences(Utils.SH_PREFS, 0).getString(getString(R.string.wrong_symbol), "");
+    String symbol = getSharedPreferences(Utils.SH_PREFS, 0).getString(getString(R.string.pref_wrong_stock_symbol), "");
     if(!symbol.isEmpty()){
+      Toast.makeText(this, symbol + getString(R.string.wrong_symbol), Toast.LENGTH_LONG).show();
       getSymbolFromUser();
     }
   }

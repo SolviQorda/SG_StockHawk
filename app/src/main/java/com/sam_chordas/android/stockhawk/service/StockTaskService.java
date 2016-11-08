@@ -141,8 +141,7 @@ public class StockTaskService extends GcmTaskService{
           } else {
             Utils.stockSearchRequest(mContext, stockInput, true);
           }
-          mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-              Utils.quoteJsonToContentVals(getResponse));
+          mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY, stockSymbols);
         }catch (RemoteException | OperationApplicationException e){
           Log.e(LOG_TAG, "Error applying batch insert", e);
         }
@@ -198,10 +197,7 @@ public class StockTaskService extends GcmTaskService{
             getHistoricResponse = fetchData(historicUrlString);
             Log.v(LOG_TAG, "historicresponse:" + getHistoricResponse);
             try {
-              //delete old data
               ContentResolver resolver = mContext.getContentResolver();
-//            resolver.delete(QuoteProvider.QuotesOverTime.CONTENT_URI,
-//                    QuoteOverTimeColumns.SYMBOL + " = \"" + stockSymbol + "\"", null);
               mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
                       Utils.quoteJsonToContentValsOverTime(getHistoricResponse));
             } catch (RemoteException | OperationApplicationException e) {

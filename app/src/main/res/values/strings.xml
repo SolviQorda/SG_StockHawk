@@ -3,11 +3,13 @@
 
   <string name="action_example" translatable="true">Example action</string>
 
+  <string name="pref_wrong_stock_symbol" translatable="false">invalid_stock_symbol</string>
+
   <string name="action_settings" translatable="true">Settings</string>
   <string name="action_change_units" translatable="true">Change Units</string>
   <string name="symbol_search" translatable="true">Symbol Search</string>
   <string name="content_test" translatable="true">Search for a Stock Symbol</string>
-  <string name="wrong_symbol" translatable="true">That stock didn\'t work - check your symbol spelling and try again.</string>
+  <string name="wrong_symbol" translatable="true"> didn\'t work - check your symbol spelling and try again.</string>
   <string name="input_hint" translatable="false">FB</string>
   <string name="input_prefill"></string>
   <string name="no_network_blank_screen" translatable="true">No internet connection detected. To update or access data please connect your device to the internet.</string>
@@ -16,4 +18,5 @@
 
   <string name="chart_description" translatable="true">Stock price over the last 3 months</string>
   <string name="stock_collection_widget" translatable="true">StockHawk collection widget</string>
+
 </resources>

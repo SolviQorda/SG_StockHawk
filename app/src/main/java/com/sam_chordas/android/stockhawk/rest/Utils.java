@@ -70,8 +70,8 @@ public class Utils {
       jsonObject = new JSONObject(JSON);
       if(jsonObject != null && jsonObject.length()!=0){
         jsonObject = jsonObject.getJSONObject("query");
-//        int count = Integer.parseInt(jsonObject.getString("count"));
-//        if (count)
+        int count = Integer.parseInt(jsonObject.getString("count"));
+        if (count == 1)
         jsonArray = jsonObject.getJSONObject("results").getJSONArray("quote");
         if(jsonArray != null && jsonArray.length() != 0) {
           for (int i =0;i <jsonArray.length();i++){
@@ -157,10 +157,10 @@ public class Utils {
       SharedPreferences prefs = context.getSharedPreferences(SH_PREFS, 0);
       SharedPreferences.Editor editor = prefs.edit();
       if(result == true) {
-        editor.putString(context.getString(R.string.wrong_symbol), "").apply();
+        editor.putString(context.getString(R.string.pref_wrong_stock_symbol), "").apply();
       } else {
         editor.clear().apply();
-        editor.putString(context.getString(R.string.wrong_symbol), " '" + symbol + "'").apply();
+        editor.putString(context.getString(R.string.pref_wrong_stock_symbol), "'" + symbol + "' ").apply();
       }
     }
   }
